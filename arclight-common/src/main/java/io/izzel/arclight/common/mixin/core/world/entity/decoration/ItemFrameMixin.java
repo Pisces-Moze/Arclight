@@ -52,14 +52,19 @@ public abstract class ItemFrameMixin extends BlockAttachedEntityMixin {
         }
     }
 
+    @Inject(method = "calculateBoundingBox", at = @At("HEAD"), cancellable = true)
+    private void arclight$calculateBoundingBox(BlockPos blockPos, Direction direction, CallbackInfoReturnable<AABB> cir) {
+        cir.setReturnValue(calculateBoundingBoxStatic(blockPos, direction));
+    }
+
     @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
-    private static AABB calculateBoundingBox(Entity entity, BlockPos blockPosition, Direction direction, int width, int height) {
+    private static AABB calculateBoundingBoxStatic(BlockPos blockPos, Direction direction) {
         float f = 0.46875F;
-        Vec3 vec3d = Vec3.atCenterOf(blockPosition).relative(direction, -0.46875D);
-        Direction.Axis enumdirection_enumaxis = direction.getAxis();
-        double d0 = enumdirection_enumaxis == Direction.Axis.X ? 0.0625D : 0.75D;
-        double d1 = enumdirection_enumaxis == Direction.Axis.Y ? 0.0625D : 0.75D;
-        double d2 = enumdirection_enumaxis == Direction.Axis.Z ? 0.0625D : 0.75D;
+        Vec3 vec3d = Vec3.atCenterOf(blockPos).relative(direction, -0.46875D);
+        Direction.Axis axis = direction.getAxis();
+        double d0 = axis == Direction.Axis.X ? 0.0625D : 0.75D;
+        double d1 = axis == Direction.Axis.Y ? 0.0625D : 0.75D;
+        double d2 = axis == Direction.Axis.Z ? 0.0625D : 0.75D;
         return AABB.ofSize(vec3d, d0, d1, d2);
     }
 }

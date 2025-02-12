@@ -94,35 +94,4 @@ public abstract class BlockAttachedEntityMixin extends EntityMixin {
     private static double a(int i) {
         return i % 32 == 0 ? 0.5D : 0.0D;
     }
-
-    @TransformAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
-    private static AABB calculateBoundingBox(Entity entity, BlockPos blockPosition, Direction direction, int width, int height) {
-        double d0 = blockPosition.getX() + 0.5;
-        double d2 = blockPosition.getY() + 0.5;
-        double d3 = blockPosition.getZ() + 0.5;
-        double d4 = 0.46875;
-        double d5 = a(width);
-        double d6 = a(height);
-        d0 -= direction.getStepX() * 0.46875;
-        d3 -= direction.getStepZ() * 0.46875;
-        d2 += d6;
-        Direction enumdirection = direction.getCounterClockWise();
-        d0 += d5 * enumdirection.getStepX();
-        d3 += d5 * enumdirection.getStepZ();
-        if (entity != null) {
-            entity.setPosRaw(d0, d2, d3);
-        }
-        double d7 = width;
-        double d8 = height;
-        double d9 = width;
-        if (direction.getAxis() == Direction.Axis.Z) {
-            d9 = 1.0;
-        } else {
-            d7 = 1.0;
-        }
-        d7 /= 32.0;
-        d8 /= 32.0;
-        d9 /= 32.0;
-        return new AABB(d0 - d7, d2 - d8, d3 - d9, d0 + d7, d2 + d8, d3 + d9);
-    }
 }
