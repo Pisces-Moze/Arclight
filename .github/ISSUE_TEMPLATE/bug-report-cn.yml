@@ -1,14 +1,14 @@
 name: 🐞 错误报告表格
 description: 通过填写表格来报告错误
-labels: [ "Triage" ]
+labels: [ "Status: Triage | 待检查" ]
 
 body:
   - type: markdown
     attributes:
       value: |
-        报告前先阅读[常见问题](https://github.com/IzzelAliz/Arclight/wiki/FAQ)！
+        报告前先阅读[常见问题](https://wiki.izzel.io/s/arclight-docs/doc/faq-ApcZ25PXVT)！
         
-        请使用[最新的构建版本](https://ci.appveyor.com/project/IzzelAliz/arclight-18/build/artifacts)报告，你发现的问题很可能已经修复。
+        请使用[最新的构建版本](https://github.com/ArclightPowered/ArclightESR/actions)报告，你发现的问题很可能已经修复。
         
         在进行错误报告之前，请确保没有类似的现有的报告。
 
@@ -23,9 +23,9 @@ body:
           required: true
         - label: 已为所有插件及模组更新至最新版
           required: true
-        - label: 不可在 Spigot 复现
+        - label: 不可在 Spigot 服务端复现
           required: true
-        - label: 不可在 Forge 复现
+        - label: 不可在对应 Mod 加载器服务端（Forge/NeoForge/Fabric）复现
           required: true
 
   - type: input

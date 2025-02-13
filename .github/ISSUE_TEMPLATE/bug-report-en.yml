@@ -1,14 +1,14 @@
 name: 🐞 Bug Report
 description: English template for reporting a bug
-labels: [ "Triage" ]
+labels: [ "Status: Triage | 待检查" ]
 
 body:
   - type: markdown
     attributes:
       value: |
-        Read the [FAQ](https://github.com/IzzelAliz/Arclight/wiki/FAQ) first!
+        Read the [FAQ](https://wiki.izzel.io/s/arclight-docs/doc/faq-ApcZ25PXVT) first!
 
-        Report with [latest development version](https://ci.appveyor.com/project/IzzelAliz/arclight-18/build/artifacts), your issue is likely to be fixed.
+        Report with [latest development version](https://github.com/ArclightPowered/ArclightESR/actions), your issue is likely to be fixed.
 
         Make sure you have searched issues and no similar is present.
 
@@ -24,7 +24,7 @@ body:
           required: true
         - label: unable to reproduce in Spigot
           required: true
-        - label: unable to reproduce in Forge
+        - label: unable to reproduce in specific Mod-loader Server (Forge/NeoForge/Fabric)
           required: true
 
   - type: input
