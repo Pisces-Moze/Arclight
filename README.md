@@ -2,15 +2,15 @@
 
 A Bukkit server implementation on common mod loaders.
 
-![Downloads](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![GitHub](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
+![Downloads count](https://img.shields.io/github/downloads/IzzelAliz/Arclight/total?style=flat-square)  ![License](https://img.shields.io/github/license/IzzelAliz/Arclight?style=flat-square)
 
-![](.github/arclightlogo.jpg)
+![Logo](.github/arclightlogo.jpg)
 
 ## Download
 Versions list and support status: [Discussions thread](https://github.com/IzzelAliz/Arclight/discussions/1575)
 
 - [Stable releases](https://github.com/IzzelAliz/Arclight/releases)
-- [Nightly build (GitHub login required)](https://github.com/IzzelAliz/Arclight/actions)
+- [Nightly builds](https://arclight.izzel.io/)
 
 ## Installing
 
