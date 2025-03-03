@@ -4,6 +4,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import io.izzel.arclight.api.EnumHelper;
 import io.izzel.arclight.api.Unsafe;
 import io.izzel.arclight.common.bridge.bukkit.EntityTypeBridge;
@@ -28,14 +30,11 @@ import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CookingBookCategory;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.dimension.LevelStem;
-import org.bukkit.Art;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Statistic;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.craftbukkit.v.CraftStatistic;
 import org.bukkit.craftbukkit.v.inventory.CraftRecipe;
@@ -50,7 +49,9 @@ import org.bukkit.entity.Pose;
 import org.bukkit.entity.SpawnCategory;
 import org.bukkit.potion.PotionType;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,6 +94,7 @@ public class BukkitRegistry {
         loadEndDragonPhase();
         loadCookingBookCategory();
         loadFluids();
+        loadGameRules();
         try {
             for (var field : org.bukkit.Registry.class.getFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.get(null) instanceof org.bukkit.Registry.SimpleRegistry<?> registry) {
@@ -101,6 +103,44 @@ public class BukkitRegistry {
             }
         } catch (Throwable ignored) {
         }
+    }
+
+    private static void loadGameRules() {
+        Map<String, GameRule<?>> gameRules;
+        Constructor<GameRule> constructor;
+        try {
+            var rules = GameRule.class.getDeclaredField("gameRules");
+            rules.setAccessible(true);
+            gameRules = (Map<String, GameRule<?>>) rules.get(null);
+            constructor = GameRule.class.getDeclaredConstructor(String.class, Class.class);
+            constructor.setAccessible(true);
+        } catch (ReflectiveOperationException e) {
+            ArclightServer.LOGGER.warn("Cannot register all custom game rules for bukkit!", e);
+            ArclightServer.LOGGER.warn("This is a bug, and will cause commands like mvgamerule not working properly. Please report this!");
+            return;
+        }
+        GameRules.visitGameRuleTypes(new GameRules.GameRuleTypeVisitor() {
+            @Override
+            public <T extends GameRules.Value<T>> void visit(GameRules.Key<T> key, GameRules.Type<T> type) {
+                if (!gameRules.containsKey(key.getId())) {
+                    Class clazz;
+                    var argType = type.createArgument("arclight").getType();
+                    if (argType instanceof BoolArgumentType) {
+                        clazz = Boolean.class;
+                    } else if (argType instanceof IntegerArgumentType) {
+                        clazz = Integer.class;
+                    } else {
+                        clazz = String.class;
+                    }
+                    try {
+                        var instance = constructor.newInstance(key.getId(), clazz);
+                        gameRules.put(key.getId(), instance);
+                    } catch (ReflectiveOperationException e) {
+                        ArclightServer.LOGGER.warn("Cannot register custom game rule {} for bukkit!", key.getId(), e);
+                    }
+                }
+            }
+        });
     }
 
     private static void loadFluids() {
