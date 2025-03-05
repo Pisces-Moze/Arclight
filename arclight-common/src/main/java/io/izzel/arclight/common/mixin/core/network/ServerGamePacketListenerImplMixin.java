@@ -1706,15 +1706,6 @@ public abstract class ServerGamePacketListenerImplMixin extends ServerCommonPack
         DecorationOps.blackhole().invoke(x, y, z, yaw, pitch);
     }
 
-    @Inject(method = "teleport(DDDFFLjava/util/Set;)V", at = @At(value = "FIELD", opcode = Opcodes.PUTFIELD, target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;awaitingTeleportTime:I"))
-    private void arclight$storeLastPosition(double d, double e, double f, float yaw, float pitch, Set<RelativeMovement> set, CallbackInfo ci) {
-        this.lastPosX = this.awaitingPositionFromClient.x;
-        this.lastPosY = this.awaitingPositionFromClient.y;
-        this.lastPosZ = this.awaitingPositionFromClient.z;
-        this.lastYaw = yaw;
-        this.lastPitch = pitch;
-    }
-
     public void teleport(double d0, double d1, double d2, float f, float f1, PlayerTeleportEvent.TeleportCause cause) {
         this.teleport(d0, d1, d2, f, f1, Collections.emptySet(), cause);
     }
