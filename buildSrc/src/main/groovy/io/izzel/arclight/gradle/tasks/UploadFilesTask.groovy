@@ -29,6 +29,11 @@ abstract class UploadFilesTask extends DefaultTask {
 
     @TaskAction
     void run() {
+        if (!System.getenv().ARCLIGHT_FILES_TOKEN) {
+            project.logger.lifecycle('No arclight token set, skipping upload files.')
+            return
+        }
+
         for (def file in inputs.files.asFileTree.files) {
             if (file.isFile()) {
                 try {
