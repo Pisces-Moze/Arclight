@@ -5,8 +5,10 @@ import io.izzel.arclight.gradle.runnable.FileDownloader
 import io.izzel.arclight.gradle.runnable.SpigotBuilder
 import io.izzel.arclight.gradle.tasks.ProcessMappingTask
 import io.izzel.arclight.gradle.tasks.RemapSpigotTask
-import net.fabricmc.loom.bootstrap.LoomGradlePluginBootstrap
+import io.izzel.arclight.gradle.tasks.RenameJarTask
+import net.fabricmc.loom.LoomGradlePlugin
 import net.fabricmc.loom.configuration.mods.dependency.LocalMavenHelper
+import net.fabricmc.loom.task.RemapJarTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -17,7 +19,7 @@ class ArclightGradlePlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.plugins.apply(LoomGradlePluginBootstrap)
+        project.plugins.apply(LoomGradlePlugin)
         def arclight = project.extensions.create('arclight', ArclightExtension, project)
 
         def arclightRepo = arclight.cacheDir.resolve('arclight_repo')
@@ -39,6 +41,14 @@ class ArclightGradlePlugin implements Plugin<Project> {
         arclight.mappingsConfiguration.bukkitToNeoForge = neoforgeMappings
         arclight.mappingsConfiguration.bukkitToFabric = fabricMappings
         arclight.mappingsConfiguration.bukkitToFabricInheritance = fabricInheritance
+
+        project.tasks.register('relocateCraftBukkit', RenameJarTask) {
+            it.dependsOn project.tasks.remapJar
+            inputJar.set project.tasks.remapJar.archiveFile
+            archiveClassifier.set 'relocated'
+            mappings = arclight.mappingsConfiguration.reobfBukkitPackage
+        }
+        project.tasks.build.dependsOn('relocateCraftBukkit')
 
         project.afterEvaluate {
             setupSpigot(project, arclightRepo)

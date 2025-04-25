@@ -148,7 +148,7 @@ tasks.register('forgeJar', Jar) {
         exclude "org/apache/commons/lang/enum/**"
     }
     into('/') {
-        it.from(project(':arclight-forge').tasks.remapJar.outputs.files.collect())
+        it.from(project(':arclight-forge').tasks.relocateCraftBukkit.outputs.files.collect())
         it.rename { name -> 'common.jar' }
     }
     into('/') {
@@ -180,7 +180,7 @@ tasks.register('neoforgeJar', Jar) {
         exclude "org/apache/commons/lang/enum/**"
     }
     into('/') {
-        it.from(project(':arclight-neoforge').tasks.remapJar.outputs.files.collect())
+        it.from(project(':arclight-neoforge').tasks.relocateCraftBukkit.outputs.files.collect())
         it.rename { name -> 'common.jar' }
     }
     into('/') {
@@ -204,7 +204,7 @@ tasks.register('fabricJar', Jar) {
     manifest.attributes 'Automatic-Module-Name': 'arclight.boot'
     from(configurations.embedFabric.collect { it.isDirectory() ? it : zipTree(it) })
     into('/') {
-        it.from(project(':arclight-fabric').tasks.remapJar.outputs.files.collect())
+        it.from(project(':arclight-fabric').tasks.relocateCraftBukkit.outputs.files.collect())
         it.rename { name -> 'common.jar' }
     }
     into('/') {
@@ -328,14 +328,6 @@ publishing {
                 username = project.findProperty("mavenUser") ?: System.getenv("ARCLIGHT_USER")
                 password = project.findProperty("mavenToken") ?: System.getenv("ARCLIGHT_TOKEN")
             }
-        }
-    }
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = 'arclight-forge-' + versionName
-            artifact project(':arclight-forge').tasks.srgJar
-            artifact project(':arclight-forge').tasks.spigotJar
-            artifact project(':arclight-forge').tasks.sourcesJar
         }
     }
 }

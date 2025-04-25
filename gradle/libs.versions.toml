@@ -1,12 +1,12 @@
 [versions]
 lombok = '1.18.36'
 
-architectury-loom = '1.9-SNAPSHOT'
+architectury-loom = '1.10-SNAPSHOT'
 lorenz = '0.5.8'
 lorenz-io-proguard = '0.5.8'
 lorenz-tiny = '4.0.2'
 mercury = '0.1.4.17'
-special-source = '1.11.3'
+special-source = '1.11.5'
 
 [libraries]
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok'}

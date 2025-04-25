@@ -1,5 +1,3 @@
-import io.izzel.arclight.gradle.tasks.RenameJarTask
-
 plugins {
     id 'architectury-plugin' version "${architect_plugin_version}"
     id 'com.gradleup.shadow' version "${shadow_plugin_version}"
@@ -96,12 +94,6 @@ remapJar {
     atAccessWideners.add(loom.accessWidenerPath.get().asFile.getName())
 }
 
-tasks.register('reobfJar', RenameJarTask) {
-    inputJar.set remapJar.archiveFile
-    archiveClassifier.set 'reobf'
-    mappings = arclight.mappingsConfiguration.reobfBukkitPackage
-}
-
 tasks.register('srgJar', Jar) {
     from(tasks.remapJar.outputs.files.collect { it.isDirectory() ? it : zipTree(it) }) {
         include 'io/izzel/**'
@@ -110,14 +102,6 @@ tasks.register('srgJar', Jar) {
     }
     archiveClassifier.set('srg')
     dependsOn remapJar
-}
-
-tasks.register('spigotJar', RenameJarTask) {
-    inputJar.set tasks.srgJar.archiveFile
-    mappings = arclight.mappingsConfiguration.bukkitToForge
-    reverse = true
-    archiveClassifier.set('spigot')
-    dependsOn tasks.srgJar
 }
 
 sourcesJar {

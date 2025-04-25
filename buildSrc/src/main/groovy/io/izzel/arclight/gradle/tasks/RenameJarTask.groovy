@@ -46,4 +46,9 @@ abstract class RenameJarTask extends Jar {
         }
         SpecialSource.main(args.toArray(new String[0]) as String[])
     }
+
+    @Override
+    protected void copy() {
+        // Dont copy.
+    }
 }
