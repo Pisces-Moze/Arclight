@@ -21,7 +21,6 @@ class ArclightGradlePlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.plugins.apply(LoomGradlePlugin)
         def arclight = project.extensions.create('arclight', ArclightExtension, project)
 
         def arclightRepo = arclight.cacheDir.resolve('arclight_repo')

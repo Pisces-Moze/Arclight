@@ -53,6 +53,7 @@ allprojects {
 
 subprojects.findAll(p -> p.name.startsWith('arclight-')).each {p ->
     configure(p) {
+        apply plugin: 'dev.architectury.loom'
         apply plugin: ArclightGradlePlugin
 
         arclight {
