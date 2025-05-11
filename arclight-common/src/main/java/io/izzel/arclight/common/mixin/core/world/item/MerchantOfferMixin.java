@@ -27,13 +27,13 @@ public abstract class MerchantOfferMixin implements MerchantOfferBridge {
     }
 
     @ShadowConstructor
-    public void arclight$constructor(ItemCost itemCost, Optional<ItemCost> optional, ItemStack itemStack, int i, int j, boolean bl, int k, int l, float f, int m) {
+    public void arclight$constructor(ItemCost itemCost, Optional<ItemCost> optional, ItemStack itemStack, int i, int j, int k, float f, int l) {
         throw new RuntimeException();
     }
 
     @CreateConstructor
-    public void arclight$constructor(ItemCost itemCost, Optional<ItemCost> optional, ItemStack itemStack, int i, int j, boolean bl, int k, int l, float f, int m, CraftMerchantRecipe bukkit) {
-        arclight$constructor(itemCost, optional, itemStack, i, j, bl, k, l, f, m);
+    public void arclight$constructor(ItemCost itemCost, Optional<ItemCost> optional, ItemStack itemStack, int i, int j, int k, float f, int l, CraftMerchantRecipe bukkit) {
+        arclight$constructor(itemCost, optional, itemStack, i, j, k, f, l);
         this.bukkitHandle = bukkit;
     }
 
