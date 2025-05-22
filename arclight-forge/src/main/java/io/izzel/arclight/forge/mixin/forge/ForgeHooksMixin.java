@@ -30,7 +30,7 @@ public class ForgeHooksMixin {
     private static void arclight$recordUnknown(CustomPayloadEvent event, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValueZ()) {
             var recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
-            recorder.recordUnknown(event.getChannel().toString());
+            recorder.recordUnknown(event.getChannel());
             recorder.update();
         }
     }

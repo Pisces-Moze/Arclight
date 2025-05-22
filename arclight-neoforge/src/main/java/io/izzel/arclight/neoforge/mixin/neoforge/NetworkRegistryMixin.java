@@ -60,7 +60,7 @@ public abstract class NetworkRegistryMixin {
 
     @Redirect(method = "getCodec", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
     private static void arclight$recordUnknown(Logger instance, String s, Object o) {
-        if (o instanceof String id) {
+        if (o instanceof ResourceLocation id) {
             PacketRecorder recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
             recorder.recordUnknown(id);
             recorder.update();

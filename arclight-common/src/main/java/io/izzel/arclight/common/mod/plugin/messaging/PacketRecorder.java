@@ -4,18 +4,19 @@ import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.server.ArclightServer;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import net.minecraft.Util;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.stream.Collectors;
 
 public class PacketRecorder {
-    private final Object2IntArrayMap<String> unknown = new Object2IntArrayMap<>();
+    private final Object2IntArrayMap<ResourceLocation> unknown = new Object2IntArrayMap<>();
     private long lastUpdate = Util.getMillis();
 
     public PacketRecorder() {
         unknown.defaultReturnValue(0);
     }
 
-    public void recordUnknown(String id) {
+    public void recordUnknown(ResourceLocation id) {
         int num = unknown.getInt(id);
         unknown.put(id, num + 1);
     }
@@ -30,7 +31,7 @@ public class PacketRecorder {
 
     public void consumeAndLog() {
         String unknowns = unknown.object2IntEntrySet().stream()
-                .map(it -> it.getKey() + '(' + it.getIntValue() + ')')
+                .map(it -> it.getKey().toString() + '(' + it.getIntValue() + ')')
                 .collect(Collectors.joining(", ", "unknown=[", "];"));
         unknown.clear();
 
