@@ -59,6 +59,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.dimension.end.EndDragonFight;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
@@ -122,11 +123,10 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
     @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
     @Shadow public abstract DimensionDataStorage getDataStorage();
     @Shadow protected abstract void addPlayer(ServerPlayer serverPlayer);
-    // @formatter:on
-
     @Shadow @Nullable public abstract Entity getEntity(int i);
-
     @Shadow public abstract void sendBlockUpdated(BlockPos blockPos, BlockState blockState, BlockState blockState2, int i);
+    @Shadow @javax.annotation.Nullable private EndDragonFight dragonFight;
+    // @formatter:on
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     public PrimaryLevelData K; // Stupid CraftBukkit patch.
@@ -150,6 +150,7 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         assert craftBridge != null; // Already checked in bridge
         // We have no way but store it somewhere and use a default value
         // in order to avoid having to pass them as arguments.
+        craftBridge.bridge$offerEnvironmentCache(worldInfo.getLevelName(), env);
         craftBridge.bridge$offerGeneratorCache(worldInfo.getLevelName(), gen);
         craftBridge.bridge$offerBiomeProviderCache(worldInfo.getLevelName(), biomeProvider);
         arclight$constructor(server, backgroundExecutor, levelSave, worldInfo, dimension, levelStem, statusListener, isDebug, seed, specialSpawners, shouldBeTicking, seq);
@@ -172,20 +173,26 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         }
 
         var craftBridge = (CraftServerBridge) (Object) ((MinecraftServerBridge) server).bridge$getServer();
+
         this.biomeProvider = craftBridge.bridge$consumeBiomeProviderCache(worldInfo.getLevelName());
         this.generator = craftBridge.bridge$consumeGeneratorCache(worldInfo.getLevelName());
+        this.environment = craftBridge.bridge$consumeEnvironmentCache(worldInfo.getLevelName());
 
-        if (instance.type().is(LevelStem.OVERWORLD.location())) {
-            this.environment = World.Environment.NORMAL;
-        } else if (instance.type().is(LevelStem.NETHER.location())) {
-            this.environment = World.Environment.NETHER;
-        } else if (instance.type().is(LevelStem.END.location())) {
-            this.environment = World.Environment.THE_END;
-        } else {
-            // Don't use CUSTOM; it's not even supported in Multiverse
-            // this.environment = World.Environment.CUSTOM;
-            this.environment = World.Environment.NORMAL;
+        if (this.environment == null) {
+            // Select world environment for vanilla/mod world creation
+            if (instance.type().is(LevelStem.OVERWORLD.location())) {
+                this.environment = World.Environment.NORMAL;
+            } else if (instance.type().is(LevelStem.NETHER.location())) {
+                this.environment = World.Environment.NETHER;
+            } else if (instance.type().is(LevelStem.END.location())) {
+                this.environment = World.Environment.THE_END;
+            } else {
+                // Don't use CUSTOM; it's not even supported in Multiverse
+                // this.environment = World.Environment.CUSTOM;
+                this.environment = World.Environment.NORMAL;
+            }
         }
+
         // Data needed by getWorld() are all initialized for possible creating CraftWorld.
         // CraftBukkit start: select custom chunk generator
         ChunkGenerator raw = (ChunkGenerator) DecorationOps.callsite().invoke(instance);
@@ -206,10 +213,18 @@ public abstract class ServerLevelMixin extends LevelMixin implements ServerWorld
         return raw;
     }
 
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;getWorldData()Lnet/minecraft/world/level/storage/WorldData;"))
+    private WorldData arclight$useRespective(MinecraftServer server) {
+        return K;
+    }
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void arclight$init(MinecraftServer minecraftServer, Executor backgroundExecutor, LevelStorageSource.LevelStorageAccess levelSave, ServerLevelData worldInfo, ResourceKey<Level> dimension, LevelStem levelStem, ChunkProgressListener statusListener, boolean isDebug, long seed, List<CustomSpawner> specialSpawners, boolean shouldBeTicking, RandomSequences seq, CallbackInfo ci) {
         this.pvpMode = minecraftServer.isPvpAllowed();
         this.convertable = levelSave;
+        if (this.dragonFight == null && this.environment == World.Environment.THE_END) {
+            this.dragonFight = new EndDragonFight((ServerLevel)(Object) this, K.worldGenOptions().seed(), K.endDragonFightData());
+        }
         var typeKey = ((LevelStorageSourceBridge.LevelStorageAccessBridge) levelSave).bridge$getTypeKey();
         if (typeKey != null) {
             this.typeKey = typeKey;

@@ -183,6 +183,7 @@ public abstract class CraftServerMixin implements CraftServerBridge {
 
     private final Map<String, ChunkGenerator> generatorCache = new HashMap<>();
     private final Map<String, BiomeProvider> biomeProviderCache = new HashMap<>();
+    private final Map<String, World.Environment> environmentCache = new HashMap<>();
 
     @Override
     public void bridge$offerGeneratorCache(String name, ChunkGenerator generator) {
@@ -218,5 +219,15 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     public void bridge$offerBiomeProviderCache(String name, BiomeProvider provider) {
         // Newly created level
         biomeProviderCache.put(name, provider);
+    }
+
+    @Override
+    public World.Environment bridge$consumeEnvironmentCache(String name) {
+        return environmentCache.remove(name);
+    }
+
+    @Override
+    public void bridge$offerEnvironmentCache(String name, World.Environment environment) {
+        environmentCache.put(name, environment);
     }
 }
