@@ -33,18 +33,25 @@ public class WorldEdit {
                     }
                 }
             } else if (node.name.contains("MojangWatchdog")) {
-                var remapper = ArclightRemapper.getNmsMapper();
-                var util = remapper.mapType("net/minecraft/Util");
-                var getNanos = remapper.mapMethodName(
+                var toBukkit = ArclightRemapper.getMojMapper();
+                var toNms = ArclightRemapper.getNmsMapper();
+                var util = toBukkit.mapType("net/minecraft/Util");
+                var bukkit = toBukkit.mapMethodName(
                         "net/minecraft/Util",
                         "getNanos",
+                        "()J"
+                );
+                var utilNms = toNms.mapType(util);
+                var getNanos = toNms.mapMethodName(
+                        util,
+                        bukkit,
                         "()J"
                 );
                 for (MethodNode method : node.methods) {
                     if (method.name.equals("tick")) {
                         for (AbstractInsnNode current : method.instructions) {
                             if (current instanceof MethodInsnNode invoke && invoke.getOpcode() == Opcodes.INVOKESTATIC) {
-                                invoke.owner = util;
+                                invoke.owner = utilNms;
                                 invoke.name = getNanos;
                                 invoke.desc = "()J";
                                 break;
