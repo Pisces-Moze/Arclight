@@ -34,6 +34,7 @@ public class EnumTypeFactory implements TypeAdapterFactory {
 
         private final Map<String, T> nameToConstant = new HashMap<String, T>();
         private final Map<T, String> constantToName = new HashMap<T, String>();
+        private final Map<String, T> stringToConstant = new HashMap<>();
 
         public EnumTypeAdapter(Class<T> classOfT) {
             for (T constant : classOfT.getEnumConstants()) {
@@ -52,6 +53,7 @@ public class EnumTypeFactory implements TypeAdapterFactory {
                 }
                 nameToConstant.put(name, constant);
                 constantToName.put(constant, name);
+                stringToConstant.put(constant.toString(), constant);
             }
         }
 
@@ -61,7 +63,9 @@ public class EnumTypeFactory implements TypeAdapterFactory {
                 in.nextNull();
                 return null;
             }
-            return nameToConstant.get(in.nextString());
+            String value = in.nextString();
+            T fromName = nameToConstant.get(value);
+            return fromName == null ? stringToConstant.get(value) : fromName;
         }
 
         @Override
