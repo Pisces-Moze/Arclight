@@ -7,7 +7,6 @@ import io.izzel.arclight.common.bridge.core.server.MinecraftServerBridge;
 import io.izzel.arclight.common.mod.ArclightConstants;
 import io.izzel.arclight.common.mod.plugin.messaging.PacketRecorder;
 import io.izzel.arclight.common.mod.plugin.messaging.RawPayload;
-import io.izzel.arclight.common.mod.util.Blackhole;
 import io.izzel.arclight.mixin.Decorate;
 import io.izzel.arclight.mixin.DecorationOps;
 import io.izzel.arclight.mixin.Local;
@@ -26,6 +25,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistration;
 import org.bukkit.Bukkit;
 import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
+import org.slf4j.helpers.NOPLogger;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -51,15 +51,18 @@ public abstract class NetworkRegistryMixin {
 
     @Decorate(method = "getCodec", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;)V"))
     private static void arclight$discardIllegal(Logger instance, String s, Object o, ResourceLocation id, ConnectionProtocol protocol, PacketFlow flow) throws Throwable {
+        // We always need to invoke warn() as there may be other implementation modifying return value / logic here.
+        // But make sure we don't log loud warnings since they are always recorded quietly.
+        // Designed to make it compatible with Oritech / Forgified Fabric API, </3 NeoForge
+        DecorationOps.callsite().invoke((Logger) NOPLogger.NOP_LOGGER, s, o);
+
+        // If the method is still not cancelled, then we'll handle the mess.
         PacketRecorder recorder = ((MessengerBridge) Bukkit.getMessenger()).arclight$getPacketRecorder();
         recorder.recordUnknown(id);
         recorder.update();
         if (flow == PacketFlow.CLIENTBOUND) {
             DecorationOps.cancel().invoke(RawPayload.discardedCodec(id, ArclightConstants.MAX_C2S_CUSTOM_PAYLOAD_SIZE));
             return;
-        }
-        if (Blackhole.actuallyFalse()) {
-            DecorationOps.callsite().invoke(instance, s, o);
         }
     }
 

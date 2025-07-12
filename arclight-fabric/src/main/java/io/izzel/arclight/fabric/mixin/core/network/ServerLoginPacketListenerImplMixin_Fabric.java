@@ -14,15 +14,16 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class ServerLoginPacketListenerImplMixin_Fabric implements ServerLoginPacketListenerBridge, NetworkHandlerExtensions {
 
     @Override
-    public FriendlyByteBuf bridge$getDiscardedQueryAnswerData(ServerboundCustomQueryAnswerPacket packet) {
+    public FriendlyByteBuf arclight$platform$customQAData(ServerboundCustomQueryAnswerPacket packet) {
         if (packet.payload() instanceof PacketByteBufLoginQueryResponse query) {
-            return new FriendlyByteBuf(Unpooled.wrappedBuffer(Unpooled.copyBoolean(true), query.data().slice()));
+            // Data is consumed before we handle it
+            return new FriendlyByteBuf(Unpooled.wrappedBuffer(Unpooled.copyBoolean(true), query.data().readerIndex(0)));
         }
         return null;
     }
 
     @Override
-    public void bridge$platform$onCustomQuery(ServerboundCustomQueryAnswerPacket payload) {
+    public void arclight$platform$onCustomQA(ServerboundCustomQueryAnswerPacket payload) {
         ((ServerLoginNetworkAddon) this.getAddon()).handle(payload);
     }
 }
