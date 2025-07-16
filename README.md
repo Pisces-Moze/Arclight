@@ -46,6 +46,4 @@ applications. YourKit is the creator of <a href="https://www.yourkit.com/java/pr
 <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
 and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
 
-[![](.github/jetbrains.png)](https://www.jetbrains.com/?from=Arclight)
-
-[![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")
+[<img src="https://dartnode.com/branding/DN-Open-Source-sm.png" width=50% alt="Powered by DartNode" />](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")
