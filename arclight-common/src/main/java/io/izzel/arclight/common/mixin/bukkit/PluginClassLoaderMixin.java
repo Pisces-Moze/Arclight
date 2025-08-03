@@ -1,8 +1,9 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
+import com.google.common.collect.Iterators;
 import com.google.common.io.ByteStreams;
-import cpw.mods.modlauncher.EnumerationHelper;
 import io.izzel.arclight.common.bridge.bukkit.JavaPluginLoaderBridge;
+import io.izzel.arclight.common.bridge.bukkit.PluginClassLoaderBridge;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapConfig;
 import io.izzel.arclight.common.mod.util.remapper.ArclightRemapper;
 import io.izzel.arclight.common.mod.util.remapper.ClassLoaderRemapper;
@@ -11,10 +12,14 @@ import io.izzel.tools.product.Product2;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPluginLoader;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,14 +34,15 @@ import java.util.concurrent.Callable;
 import java.util.jar.Manifest;
 
 @Mixin(targets = "org.bukkit.plugin.java.PluginClassLoader", remap = false)
-public class PluginClassLoaderMixin extends URLClassLoader implements RemappingClassLoader {
+public abstract class PluginClassLoaderMixin extends URLClassLoader implements RemappingClassLoader, PluginClassLoaderBridge {
 
     // @formatter:off
-    @Shadow @Final private Map<String, Class<?>> classes;
-    @Shadow @Final private JavaPluginLoader loader;
-    @Shadow @Final private PluginDescriptionFile description;
-    @Shadow @Final private Manifest manifest;
-    @Shadow @Final private URL url;
+    @Mutable @Shadow @Final private Map<String, Class<?>> classes;
+    @Mutable @Shadow @Final private JavaPluginLoader loader;
+    @Mutable @Shadow @Final private PluginDescriptionFile description;
+    @Mutable @Shadow @Final private Manifest manifest;
+    @Mutable @Shadow @Final private URL url;
+    @Shadow abstract Class<?> loadClass0(@NotNull String name, boolean resolve, boolean checkGlobal, boolean checkLibraries) throws ClassNotFoundException;
     // @formatter:on
 
     private ClassLoaderRemapper remapper;
@@ -52,6 +58,16 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
     @Override
     public ArclightRemapConfig getRemapConfig() {
         return ArclightRemapConfig.PLUGIN;
+    }
+
+    @Override
+    public PluginDescriptionFile arclight$desc() {
+        return description;
+    }
+
+    @Override
+    public Class<?> arclight$loadFromExternal(String name, boolean initialize, boolean checkLibraries) throws ClassNotFoundException {
+        return loadClass0(name, initialize, false, checkLibraries);
     }
 
     public PluginClassLoaderMixin(URL[] urls) {
@@ -89,7 +105,7 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
             tmp[1] = getParent().getResources(name);
         }
         tmp[0] = findResources(name);
-        return EnumerationHelper.merge(tmp[0], tmp[1]);
+        return Iterators.asEnumeration(Iterators.concat(Iterators.forEnumeration(tmp[0]), Iterators.forEnumeration(tmp[1])));
     }
 
     /**
@@ -158,5 +174,10 @@ public class PluginClassLoaderMixin extends URLClassLoader implements RemappingC
         }
 
         return result;
+    }
+
+    @Redirect(method = "loadClass0", at = @At(value = "NEW", target = "(Ljava/lang/String;)Ljava/lang/ClassNotFoundException;"))
+    private ClassNotFoundException arclight$addPluginInfo(String s) {
+        return new ClassNotFoundException(String.format("Plugin %s cannot load class %s", description.getName(), s));
     }
 }

@@ -32,6 +32,9 @@ public class CompatSpec {
     @Setting("lenient-item-tag-match")
     private boolean lenientItemTagMatch;
 
+    @Setting("isolate-plugin-class-loaders")
+    private List<String> isolatePluginClassLoaders;
+
     public Map<String, MaterialPropertySpec> getMaterials() {
         return materials;
     }
@@ -70,5 +73,14 @@ public class CompatSpec {
 
     public boolean isLenientItemTagMatch() {
         return lenientItemTagMatch;
+    }
+
+    public boolean isIsolatedPluginClassLoaders(String name) {
+        for (String prefix : isolatePluginClassLoaders) {
+            if (name.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
