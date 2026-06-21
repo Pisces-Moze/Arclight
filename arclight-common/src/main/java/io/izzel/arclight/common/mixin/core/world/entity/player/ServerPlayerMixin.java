@@ -887,6 +887,26 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements ServerPla
         return this.level().getDayTime() - this.level().getDayTime() % 24000L + this.timeOffset;
     }
 
+    public void setPlayerTime(long time, boolean relative) {
+        this.timeOffset = time;
+        this.relativeTime = relative;
+    }
+
+    public void resetPlayerTime() {
+        this.timeOffset = 0;
+        this.relativeTime = true;
+    }
+
+    @Override
+    public long bridge$getPlayerTimeOffset() {
+        return this.timeOffset;
+    }
+
+    @Override
+    public boolean bridge$isPlayerTimeRelative() {
+        return this.relativeTime;
+    }
+
     public WeatherType getPlayerWeather() {
         return this.weather;
     }

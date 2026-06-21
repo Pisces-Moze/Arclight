@@ -45,6 +45,7 @@ import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundChatCommandPacket;
@@ -1955,5 +1956,33 @@ public abstract class ServerPlayNetHandlerMixin implements ServerPlayNetHandlerB
 
     public SocketAddress getRawAddress() {
         return this.connection.channel.remoteAddress();
+    }
+
+    /**
+     * Intercept ClientboundSetTimePacket to support player-specific time
+     * This fixes Residence plugin's day/night flags not working properly
+     *
+     * @author Arclight Team
+     * @reason Support player custom time (e.g., Residence day/night flags)
+     */
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;)V", at = @At("HEAD"), cancellable = true)
+    private void arclight$handlePlayerTime(Packet<?> packet, CallbackInfo ci) {
+        if (packet instanceof ClientboundSetTimePacket timePacket && this.player instanceof ServerPlayerEntityBridge bridge) {
+            long timeOffset = bridge.bridge$getPlayerTimeOffset();
+            boolean isRelativeTime = bridge.bridge$isPlayerTimeRelative();
+            if (timeOffset != 0 || !isRelativeTime) {
+                ci.cancel();
+
+                long worldTime = this.player.level().getDayTime();
+                long playerTime = isRelativeTime ? worldTime + timeOffset : worldTime - worldTime % 24000L + timeOffset;
+                boolean doDaylightCycle = isRelativeTime && this.player.level().getGameRules().getBoolean(GameRules.RULE_DAYLIGHT);
+
+                this.connection.send(new ClientboundSetTimePacket(
+                    timePacket.getGameTime(),
+                    playerTime,
+                    doDaylightCycle
+                ));
+            }
+        }
     }
 }

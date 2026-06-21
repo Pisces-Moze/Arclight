@@ -78,7 +78,7 @@ dependencies {
     for (def lib : embedLibs) {
         installer lib
     }
-    embed 'io.izzel.arclight:mixin-tools:1.0.1'
+    embed files('../arclight-common/libs/mixin-tools-1.0.0.jar')
     embed "io.izzel:tools:$toolsVersion"
     embed "io.izzel.arclight:arclight-api:$apiVersion"
     embed 'commons-lang:commons-lang:2.6@jar'

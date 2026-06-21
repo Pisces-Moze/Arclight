@@ -38,4 +38,8 @@ public interface ServerPlayerEntityBridge extends PlayerEntityBridge {
     boolean bridge$isTrackerDirty();
 
     void bridge$setTrackerDirty(boolean flag);
+
+    long bridge$getPlayerTimeOffset();
+
+    boolean bridge$isPlayerTimeRelative();
 }

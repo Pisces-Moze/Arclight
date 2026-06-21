@@ -26,6 +26,7 @@ import net.minecraft.network.protocol.status.ServerStatus;
 import net.minecraft.obfuscate.DontObfuscate;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.ServerFunctionManager;
 import net.minecraft.server.Services;
@@ -204,7 +205,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Overwrite
     protected void runServer() {
         try {
-            if (!this.initServer()) {
+            if (!((DedicatedServer)(Object)this).initServer()) {
                 throw new IllegalStateException("Failed to initialize server");
             }
             ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
@@ -515,7 +516,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @DontObfuscate
     @Overwrite
     public String getServerModName() {
-        return BrandingControl.getServerBranding() + " arclight/" + ArclightVersion.current().getReleaseName();
+        return "MoLight2.3";
     }
 
     @Override
