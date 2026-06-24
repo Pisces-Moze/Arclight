@@ -18,6 +18,7 @@ public class IntegratedPatcher implements PluginPatcher {
         SPECIFIC.put("com/sk89q/worldedit/bukkit/BukkitAdapter", WorldEdit::handleBukkitAdapter);
         SPECIFIC.put("com/sk89q/worldedit/bukkit/adapter/Refraction", WorldEdit::handlePickName);
         GENERAL.add(WorldEdit::handleWatchdog);
+        GENERAL.add(BentoBoxLimits::handleEntityTypeAliases);
     }
 
     @Override

@@ -22,6 +22,7 @@ import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v.generator.CustomChunkGenerator;
 import org.bukkit.craftbukkit.v.generator.CraftLimitedRegion;
 import org.bukkit.craftbukkit.v.generator.structure.CraftStructure;
 import org.bukkit.craftbukkit.v.util.RandomSourceWrapper;
@@ -64,7 +65,11 @@ public abstract class ChunkGeneratorMixin implements ChunkGeneratorBridge {
 
     public void applyBiomeDecoration(WorldGenLevel level, ChunkAccess chunkAccess, StructureManager structureFeatureManager, boolean vanilla) {
         if (vanilla) {
-            this.applyBiomeDecoration(level, chunkAccess, structureFeatureManager);
+            if ((Object) this instanceof CustomChunkGenerator custom) {
+                custom.getDelegate().applyBiomeDecoration(level, chunkAccess, structureFeatureManager);
+            } else {
+                this.applyBiomeDecoration(level, chunkAccess, structureFeatureManager);
+            }
         } else {
             this.addDecorations(level, chunkAccess, structureFeatureManager);
         }
