@@ -12,6 +12,6 @@ public class BrandingControlMixin {
      */
     @Overwrite
     public static String getServerBranding() {
-        return "MoLight2.3";
+        return "MoLight2.4";
     }
 }

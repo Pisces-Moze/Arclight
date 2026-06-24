@@ -516,7 +516,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @DontObfuscate
     @Overwrite
     public String getServerModName() {
-        return "MoLight2.3";
+        return "MoLight2.4";
     }
 
     @Override
