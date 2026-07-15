@@ -109,11 +109,11 @@ public class ArclightServer {
     }
 
     public static boolean isPrimaryThread() {
-        if (server == null) {
-            return Thread.currentThread().equals(getMinecraftServer().getRunningThread());
-        } else {
-            return server.isPrimaryThread();
+        MinecraftServer minecraftServer = getMinecraftServer();
+        if (minecraftServer != null && Thread.currentThread().equals(minecraftServer.getRunningThread())) {
+            return true;
         }
+        return server != null && server.isPrimaryThread();
     }
 
     public static MinecraftServer getMinecraftServer() {
@@ -121,9 +121,14 @@ public class ArclightServer {
     }
 
     public static void executeOnMainThread(Runnable runnable) {
-        ((MinecraftServerBridge) getMinecraftServer()).bridge$queuedProcess(runnable);
-        if (LockSupport.getBlocker(getMinecraftServer().getRunningThread()) == "waiting for tasks") {
-            LockSupport.unpark(getMinecraftServer().getRunningThread());
+        MinecraftServer minecraftServer = getMinecraftServer();
+        if (Thread.currentThread().equals(minecraftServer.getRunningThread())) {
+            runnable.run();
+            return;
+        }
+        ((MinecraftServerBridge) minecraftServer).bridge$queuedProcess(runnable);
+        if (LockSupport.getBlocker(minecraftServer.getRunningThread()) == "waiting for tasks") {
+            LockSupport.unpark(minecraftServer.getRunningThread());
         }
     }
 

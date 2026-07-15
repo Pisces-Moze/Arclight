@@ -105,6 +105,12 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     }
 
     public static Object[] runHandle(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) {
+        // A virtual Method.invoke on a null receiver normally fails at the call site.
+        // Once rewritten to our static handler the null receiver can reach this method,
+        // so do not dereference it while looking up an optional remapping handler.
+        if (method == null) {
+            return null;
+        }
         Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> handler = METHOD_TO_HANDLER.get(methodToString(method));
         if (handler != null) {
             return handler.apply(remapper, method, src, param);
@@ -113,6 +119,9 @@ public class ArclightRedirectAdapter implements PluginTransformer {
     }
 
     public static Object runRedirect(ClassLoaderRemapper remapper, Method method, Object src, Object[] param) throws Throwable {
+        if (method == null) {
+            return remapper;
+        }
         Func4<ClassLoaderRemapper, Method, Object, Object[], Object[]> handler = METHOD_TO_HANDLER.get(methodToString(method));
         if (handler != null) {
             Object[] ret = handler.apply(remapper, method, src, param);

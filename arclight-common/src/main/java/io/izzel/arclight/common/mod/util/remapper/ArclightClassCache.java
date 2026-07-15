@@ -16,6 +16,7 @@ import java.io.*;
 import java.net.JarURLConnection;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +59,7 @@ public abstract class ArclightClassCache implements AutoCloseable {
 
     private static class Impl extends ArclightClassCache {
 
-        private static final int SPEC_VERSION = 2;
+        private static final int SPEC_VERSION = 3;
 
         private final boolean enabled = ArclightConfig.spec().getOptimization().isCachePluginClass();
         private final ConcurrentHashMap<String, JarSegment> map = new ConcurrentHashMap<>();
@@ -210,11 +211,26 @@ public abstract class ArclightClassCache implements AutoCloseable {
                     if (!cfg.equals(config)) {
                         return Optional.empty();
                     }
+                    long blobSize = Files.size(blobPath);
+                    if (off < 0 || len < 4 || off > blobSize - len) {
+                        rangeMap.remove(name, product);
+                        return Optional.empty();
+                    }
                     try (SeekableByteChannel channel = Files.newByteChannel(blobPath)) {
                         channel.position(off);
                         ByteBuffer buffer = ByteBuffer.allocate(len);
-                        channel.read(buffer);
-                        return Optional.of(buffer.array());
+                        while (buffer.hasRemaining()) {
+                            if (channel.read(buffer) <= 0) {
+                                rangeMap.remove(name, product);
+                                return Optional.empty();
+                            }
+                        }
+                        byte[] bytes = buffer.array();
+                        if (ByteBuffer.wrap(bytes).getInt() != 0xCAFEBABE) {
+                            rangeMap.remove(name, product);
+                            return Optional.empty();
+                        }
+                        return Optional.of(bytes);
                     }
                 } else {
                     return Optional.empty();
@@ -235,31 +251,78 @@ public abstract class ArclightClassCache implements AutoCloseable {
                 while (!savingQueue.isEmpty()) {
                     list.add(savingQueue.poll());
                 }
-                try (OutputStream outIndex = Files.newOutputStream(indexPath, StandardOpenOption.APPEND);
-                     DataOutputStream dataOutIndex = new DataOutputStream(outIndex);
-                     SeekableByteChannel channel = Files.newByteChannel(blobPath, StandardOpenOption.WRITE)) {
+                try {
+                    ByteArrayOutputStream indexBytes = new ByteArrayOutputStream();
+                    DataOutputStream dataOutIndex = new DataOutputStream(indexBytes);
                     for (Product5<String, byte[], Long, Integer, ArclightRemapConfig> product : list) {
-                        channel.position(product._3);
-                        channel.write(ByteBuffer.wrap(product._2));
                         dataOutIndex.writeUTF(product._1);
                         dataOutIndex.writeLong(product._3);
                         dataOutIndex.writeInt(product._4);
                         product._5.write(dataOutIndex);
+                    }
+                    dataOutIndex.flush();
+
+                    // Commit blob contents first. A crash before the index append only
+                    // leaves unreachable bytes, while the opposite order creates an
+                    // index entry pointing outside the blob.
+                    try (FileChannel channel = FileChannel.open(blobPath, StandardOpenOption.WRITE)) {
+                        for (Product5<String, byte[], Long, Integer, ArclightRemapConfig> product : list) {
+                            channel.position(product._3);
+                            ByteBuffer bytes = ByteBuffer.wrap(product._2);
+                            while (bytes.hasRemaining()) {
+                                if (channel.write(bytes) <= 0) {
+                                    throw new EOFException("Unable to write plugin class cache blob");
+                                }
+                            }
+                        }
+                        channel.force(true);
+                    }
+                    try (FileChannel channel = FileChannel.open(indexPath, StandardOpenOption.WRITE, StandardOpenOption.APPEND)) {
+                        ByteBuffer bytes = ByteBuffer.wrap(indexBytes.toByteArray());
+                        while (bytes.hasRemaining()) {
+                            if (channel.write(bytes) <= 0) {
+                                throw new EOFException("Unable to write plugin class cache index");
+                            }
+                        }
+                        channel.force(true);
+                    }
+                    for (Product5<String, byte[], Long, Integer, ArclightRemapConfig> product : list) {
                         rangeMap.put(product._1, Product.of(product._3, product._4, product._5));
                     }
+                } catch (IOException e) {
+                    savingQueue.addAll(list);
+                    throw e;
                 }
             }
 
             private synchronized void read() throws IOException {
+                long validSize = 0;
+                boolean incompleteTail = false;
+                long blobSize = Files.size(blobPath);
                 try (InputStream inputStream = Files.newInputStream(indexPath);
                      DataInputStream dataIn = new DataInputStream(inputStream)) {
                     while (dataIn.available() > 0) {
-                        String name = dataIn.readUTF();
-                        long off = dataIn.readLong();
-                        int len = dataIn.readInt();
-                        var cfg = ArclightRemapConfig.read(dataIn);
-                        rangeMap.put(name, Product.of(off, len, cfg));
+                        try {
+                            String name = dataIn.readUTF();
+                            long off = dataIn.readLong();
+                            int len = dataIn.readInt();
+                            var cfg = ArclightRemapConfig.read(dataIn);
+                            validSize = Files.size(indexPath) - dataIn.available();
+                            if (off >= 0 && len >= 4 && off <= blobSize - len) {
+                                rangeMap.put(name, Product.of(off, len, cfg));
+                            }
+                        } catch (EOFException e) {
+                            incompleteTail = true;
+                            break;
+                        }
                     }
+                }
+                if (incompleteTail) {
+                    try (FileChannel channel = FileChannel.open(indexPath, StandardOpenOption.WRITE)) {
+                        channel.truncate(validSize);
+                        channel.force(true);
+                    }
+                    ArclightMod.LOGGER.warn(MARKER, "Incomplete plugin class cache index tail is discarded");
                 }
             }
         }

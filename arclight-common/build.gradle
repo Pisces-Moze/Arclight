@@ -58,6 +58,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
     implementation 'org.jetbrains:annotations:23.0.0'
+    compileOnly 'org.apache.maven.resolver:maven-resolver-api:1.6.3'
 
     implementation "org.spongepowered:mixin:$mixinVersion"
     annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
