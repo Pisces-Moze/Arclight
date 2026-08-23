@@ -95,6 +95,7 @@ public class ArclightRemapper {
         this.toNmsMapping.setFallbackInheritanceProvider(inheritanceProvider);
         this.toBukkitMapping.setFallbackInheritanceProvider(inheritanceProvider);
         this.transformerList.add(ArclightInterfaceInvokerGen.INSTANCE);
+        this.transformerList.add(PaperNmsCompatibilityTransformer.INSTANCE);
         this.transformerList.add(ArclightRedirectAdapter.INSTANCE);
         this.transformerList.add(ClassLoaderAdapter.INSTANCE);
         if (!(java.util.logging.LogManager.getLogManager() instanceof org.apache.logging.log4j.jul.LogManager)) {

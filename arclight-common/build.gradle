@@ -33,6 +33,15 @@ arclight {
 
 configurations {
     embed
+    paperApi
+}
+
+def paperSchedulerApi = tasks.register('paperSchedulerApi', Zip) {
+    archiveClassifier.set('paper-scheduler-api')
+    archiveExtension.set('jar')
+    from({ configurations.paperApi.collect { zipTree(it) } }) {
+        include 'io/papermc/paper/threadedregions/scheduler/**'
+    }
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -45,6 +54,8 @@ minecraft {
 }
 
 repositories {
+    maven { url = 'https://maven.architectury.dev/' }
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
     maven { url = 'https://repo.spongepowered.org/repository/maven-public' }
     maven { url = 'https://oss.sonatype.org/content/repositories/snapshots/' }
     maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
@@ -57,8 +68,15 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraftVersion-$forgeVersion"
     implementation "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+    paperApi "io.papermc.paper:paper-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+    compileOnly files(paperSchedulerApi)
+    testImplementation files(paperSchedulerApi)
     implementation 'org.jetbrains:annotations:23.0.0'
     compileOnly 'org.apache.maven.resolver:maven-resolver-api:1.6.3'
+    compileOnly 'dev.architectury:architectury-forge:9.2.14'
+    testImplementation 'dev.architectury:architectury-forge:9.2.14'
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
 
     implementation "org.spongepowered:mixin:$mixinVersion"
     annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
@@ -77,7 +95,18 @@ dependencies {
     implementation project(':i18n-config')
     embed 'net.md-5:bungeecord-chat:1.16-R0.4@jar'
     embed "org.spigotmc:spigot-api:$minecraftVersion-R0.1-SNAPSHOT@jar"
+    // Only Paper's scheduler contracts are added to the runtime. Server/World receive the
+    // corresponding method declarations through interface mixins, avoiding a wholesale
+    // Paper API replacement that would conflict with CraftBukkit's Spigot ABI.
+    embed files(paperSchedulerApi)
 }
+
+test {
+    useJUnitPlatform()
+}
+
+compileJava.dependsOn paperSchedulerApi
+jar.dependsOn paperSchedulerApi
 
 jar {
     manifest.attributes 'MixinConnector': 'io.izzel.arclight.common.mod.ArclightConnector'

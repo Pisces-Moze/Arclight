@@ -4,6 +4,7 @@ import cpw.mods.modlauncher.api.NamedPath;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import io.izzel.arclight.boot.log.ArclightI18nLogger;
 import io.izzel.arclight.boot.mod.ModBootstrap;
+import io.izzel.arclight.boot.mod.TransformerAuditGuard;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -56,12 +57,14 @@ public class ArclightImplementer implements ILaunchPluginService {
     @Override
     public void initializeLaunch(ITransformerLoader transformerLoader, NamedPath[] specialPaths) {
         // runs after TX CL built
+        TransformerAuditGuard.install();
         ModBootstrap.postRun();
         this.transformerLoader = transformerLoader;
         this.implementers.put("inventory", new InventoryImplementer());
         this.implementers.put("switch", SwitchTableFixer.INSTANCE);
         this.implementers.put("async", AsyncCatcher.INSTANCE);
         this.implementers.put("enum", new EnumDefinalizer());
+        this.implementers.put("paper_api", PaperApiImplementer.INSTANCE);
         if (this.logger) {
             this.implementers.put("logger", new LoggerTransformer());
         }

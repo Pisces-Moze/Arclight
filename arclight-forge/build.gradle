@@ -74,6 +74,8 @@ dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'org.spongepowered:mixin:0.8.3'
     implementation 'org.apache.logging.log4j:log4j-jul:2.17.2'
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation "net.minecraftforge:fmlloader:${minecraftVersion}-${forgeVersion}"
     for (def lib : embedLibs) {
         installer lib
@@ -107,7 +109,7 @@ jar {
         exclude "org/apache/commons/lang/enum/**"
     }
     into('/') {
-        it.from(project(':arclight-common').tasks.jar.outputs.files.collect())
+        it.from(project(':arclight-common').file("${project(':arclight-common').buildDir}/reobfJar/output.jar"))
         it.rename { name -> 'common.jar' }
     }
     into('/') {
@@ -116,7 +118,11 @@ jar {
     }
     from sourceSets.applaunch.output.classesDirs
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(project(':arclight-common').tasks.jar)
+    dependsOn(project(':arclight-common').tasks.reobfJar)
+}
+
+test {
+    useJUnitPlatform()
 }
 
 task generateInstallerInfo {

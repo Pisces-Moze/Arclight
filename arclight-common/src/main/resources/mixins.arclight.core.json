@@ -116,6 +116,7 @@
     "world.entity.ai.behavior.StopAttackingIfTargetInvalidMixin",
     "world.entity.ai.behavior.VillagerMakeLoveMixin",
     "world.entity.ai.brain.BrainUtilMixin",
+    "world.entity.ai.goal.GoalSelectorMixin",
     "world.entity.ai.goal.BreakDoorGoalMixin",
     "world.entity.ai.goal.DefendVillageTargetGoalMixin",
     "world.entity.ai.goal.EatBlockGoalMixin",

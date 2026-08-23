@@ -2,6 +2,8 @@ package io.izzel.arclight.common.mixin.bukkit;
 
 import io.izzel.arclight.common.mod.server.entity.ArclightFakePlayer;
 import io.izzel.arclight.common.mod.server.entity.EntityClassLookup;
+import io.izzel.arclight.common.mod.server.scheduler.ArclightEntityScheduler;
+import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
@@ -13,8 +15,10 @@ import org.bukkit.craftbukkit.v.entity.CraftEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = CraftEntity.class, remap = false)
@@ -22,6 +26,17 @@ public abstract class CraftEntityMixin implements org.bukkit.entity.Entity {
 
     @Shadow protected Entity entity;
     @Shadow @Final protected CraftServer server;
+    @Unique private ArclightEntityScheduler arclight$entityScheduler;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void arclight$initializeEntityScheduler(CraftServer server, Entity entity, CallbackInfo ci) {
+        this.arclight$entityScheduler = new ArclightEntityScheduler(
+            (org.bukkit.entity.Entity) (Object) this, this.server.getScheduler());
+    }
+
+    public EntityScheduler getScheduler() {
+        return this.arclight$entityScheduler;
+    }
 
     @Inject(method = "getEntity", cancellable = true, at = @At("HEAD"))
     private static void arclight$fakePlayer(CraftServer server, Entity entity, CallbackInfoReturnable<CraftEntity> cir) {

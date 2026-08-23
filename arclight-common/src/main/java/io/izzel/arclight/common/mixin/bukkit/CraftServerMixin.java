@@ -4,8 +4,12 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.google.common.collect.Lists;
 import io.izzel.arclight.common.bridge.bukkit.CraftServerBridge;
+import io.izzel.arclight.common.bridge.bukkit.PaperSchedulerBridge;
 import io.izzel.arclight.common.bridge.core.world.WorldBridge;
 import io.izzel.arclight.common.mod.server.ArclightServer;
+import io.izzel.arclight.common.mod.server.scheduler.ArclightAsyncScheduler;
+import io.izzel.arclight.common.mod.server.scheduler.ArclightGlobalRegionScheduler;
+import io.izzel.arclight.common.mod.server.scheduler.ArclightRegionScheduler;
 import io.izzel.arclight.common.bridge.core.entity.player.ServerPlayerEntityBridge;
 import jline.console.ConsoleReader;
 import net.minecraft.commands.CommandSourceStack;
@@ -38,6 +42,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -52,7 +57,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Mixin(value = CraftServer.class, remap = false)
-public abstract class CraftServerMixin implements CraftServerBridge {
+public abstract class CraftServerMixin implements CraftServerBridge, PaperSchedulerBridge {
+
+    @Unique private ArclightGlobalRegionScheduler arclight$globalRegionScheduler;
+    @Unique private ArclightRegionScheduler arclight$regionScheduler;
+    @Unique private ArclightAsyncScheduler arclight$asyncScheduler;
 
     // @formatter:off
     @Shadow @Final private CraftCommandMap commandMap;
@@ -86,6 +95,21 @@ public abstract class CraftServerMixin implements CraftServerBridge {
     @Inject(method = "<init>", at = @At("RETURN"))
     public void arclight$setBrand(DedicatedServer console, PlayerList playerList, CallbackInfo ci) {
         this.serverName = "Arclight";
+        this.arclight$globalRegionScheduler = new ArclightGlobalRegionScheduler(this.getScheduler());
+        this.arclight$regionScheduler = new ArclightRegionScheduler(this.arclight$globalRegionScheduler);
+        this.arclight$asyncScheduler = new ArclightAsyncScheduler(this.getScheduler());
+    }
+
+    public io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler getGlobalRegionScheduler() {
+        return this.arclight$globalRegionScheduler;
+    }
+
+    public io.papermc.paper.threadedregions.scheduler.RegionScheduler getRegionScheduler() {
+        return this.arclight$regionScheduler;
+    }
+
+    public io.papermc.paper.threadedregions.scheduler.AsyncScheduler getAsyncScheduler() {
+        return this.arclight$asyncScheduler;
     }
 
     /**

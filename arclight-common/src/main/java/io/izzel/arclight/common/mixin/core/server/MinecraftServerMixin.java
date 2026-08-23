@@ -205,7 +205,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @Overwrite
     protected void runServer() {
         try {
-            if (!((DedicatedServer)(Object)this).initServer()) {
+            if (!this.initServer()) {
                 throw new IllegalStateException("Failed to initialize server");
             }
             ServerLifecycleHooks.handleServerStarted((MinecraftServer) (Object) this);
@@ -516,7 +516,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     @DontObfuscate
     @Overwrite
     public String getServerModName() {
-        return "MoLight2.5";
+        return "MoLight2.7";
     }
 
     @Override

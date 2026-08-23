@@ -1,6 +1,7 @@
 package io.izzel.arclight.common.mixin.bukkit;
 
 import com.google.common.base.Preconditions;
+import org.bukkit.Location;
 import org.bukkit.craftbukkit.v.entity.CraftPlayer;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.plugin.messaging.StandardMessenger;
@@ -15,6 +16,20 @@ import java.util.Set;
 public abstract class CraftPlayerMixin extends CraftEntityMixin {
 
     @Shadow @Final private Set<String> channels;
+    @Shadow public abstract Location getBedSpawnLocation();
+    @Shadow public abstract void setBedSpawnLocation(Location location, boolean force);
+
+    public Location getRespawnLocation() {
+        return this.getBedSpawnLocation();
+    }
+
+    public void setRespawnLocation(Location location) {
+        this.setBedSpawnLocation(location, false);
+    }
+
+    public void setRespawnLocation(Location location, boolean force) {
+        this.setBedSpawnLocation(location, force);
+    }
 
     /**
      * @author IzzelAliz

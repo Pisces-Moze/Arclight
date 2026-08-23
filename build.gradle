@@ -2,7 +2,7 @@ import io.izzel.arclight.gradle.tasks.UploadFilesTask
 
 allprojects {
     group 'io.izzel.arclight'
-    version '2.5-SNAPSHOT'
+    version '2.7'
 
     def getGitHash = { ->
         def stdout = new ByteArrayOutputStream()
